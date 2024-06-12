@@ -1,5 +1,6 @@
 module CONTROLLER # (parameter IFM_SIZE = 9162, TILING_SIZE = 8, KERNEL_SIZE = 4096) (
-	,clk
+	 clk1
+	,clk2
 	,rst_n
 	,start
 	,ifm_read
@@ -7,7 +8,7 @@ module CONTROLLER # (parameter IFM_SIZE = 9162, TILING_SIZE = 8, KERNEL_SIZE = 4
 	,valid_ifm
 	,last_kernel
 	,end_compute
-	,wr_buff_ifm_o
+	,wr_buff_ifm
 	,rd_buff_ifm
 	,set_reg
 	,wr_ifm_clr
@@ -18,7 +19,8 @@ module CONTROLLER # (parameter IFM_SIZE = 9162, TILING_SIZE = 8, KERNEL_SIZE = 4
 	,counter_tiling
 	);
 
-  input  clk; 
+  input  clk1; 
+  input  clk2; 
 	input  rst_n;
   input  start;
   input  valid_ifm;
@@ -27,7 +29,7 @@ module CONTROLLER # (parameter IFM_SIZE = 9162, TILING_SIZE = 8, KERNEL_SIZE = 4
   output reg ifm_read; 
   output reg wgt_read;
   output reg last_kernel;
-  output wire wr_buff_ifm_o;
+  output wire wr_buff_ifm;
   output reg rd_buff_ifm;
 	output reg set_reg;
   output reg wr_ifm_clr;
@@ -42,9 +44,9 @@ module CONTROLLER # (parameter IFM_SIZE = 9162, TILING_SIZE = 8, KERNEL_SIZE = 4
 
 	reg [2:0] next_state   ;
 	wire wr_buffer_w;
-	assign wr_buffer_w = valid_ifm;
-	reg wr_buff_ifm;
-	assign wr_buff_ifm_o = (wr_buff_ifm & wr_buffer_w); 
+	reg wr_buff_ifm_o;
+	assign wr_buff_w = valid_ifm;
+  assign wr_buff_ifm = (wr_buff_ifm_o | wr_buff_w); 
 	
 
 	parameter IDLE            = 3'd0;
@@ -55,7 +57,7 @@ module CONTROLLER # (parameter IFM_SIZE = 9162, TILING_SIZE = 8, KERNEL_SIZE = 4
 	parameter END             = 3'd5;	
 
 
-  always @(posedge clk or negedge rst_n) begin
+  always @(posedge clk1 or negedge rst_n) begin
   	if(!rst_n) begin
   		current_state <= 0;
   	end
@@ -93,47 +95,67 @@ module CONTROLLER # (parameter IFM_SIZE = 9162, TILING_SIZE = 8, KERNEL_SIZE = 4
 		end
      wire valid_ifm_w ;
 		 assign valid_ifm_w = valid_ifm;
-		always @(posedge clk or negedge rst_n) begin
+		always @(posedge clk1 or negedge rst_n) begin
 			if(!rst_n) begin
-	       ifm_read     <=  0;    
-	       wgt_read     <=  0;        
-	       last_kernel  <=  0;          
-	       end_compute  <=  0;         
-	       wr_buff_ifm  <=  0;        
-	       rd_buff_ifm  <=  0;         
-	       set_reg      <=  0;        
-	       wr_ifm_clr   <=  1;         
-	       rd_ifm_clr   <=  1;         
-				 set_output   <=  0;
+	       ifm_read       <=  0;    
+	       wgt_read       <=  0;        
+	       last_kernel    <=  0;          
+	       end_compute    <=  0;         
+	       rd_buff_ifm    <=  0;         
+	       set_reg        <=  0;        
+	       wr_ifm_clr     <=  1;         
+	       rd_ifm_clr     <=  1;         
+				 set_output     <=  0;
 			end
 			else begin
 				case(next_state)
 					IDLE:
-            {ifm_read, wgt_read, last_kernel,end_compute,wr_buff_ifm,rd_buff_ifm,set_reg,wr_ifm_clr ,rd_ifm_clr} <= 9'b000000000;
+            {ifm_read, wgt_read, last_kernel,end_compute,rd_buff_ifm,set_reg,wr_ifm_clr ,rd_ifm_clr} <= 9'b000000000;
 					WRITE_IFM:begin
             {ifm_read, wgt_read, last_kernel,end_compute,rd_buff_ifm,set_reg,wr_ifm_clr ,rd_ifm_clr} <= 8'b00000000;
-						wr_buff_ifm <= valid_ifm;
+				//		wr_buff_ifm_o <= valid_ifm;
 					end
 					WAIT: begin
-            {ifm_read, wgt_read, last_kernel,end_compute,wr_buff_ifm,rd_buff_ifm,set_reg,wr_ifm_clr ,rd_ifm_clr} <= 9'b000000001;
+            {ifm_read, wgt_read, last_kernel,end_compute,rd_buff_ifm,set_reg,wr_ifm_clr ,rd_ifm_clr} <= 8'b00000001;
 						set_output <= (counter_tiling > 0) ? 1 : 0;
 					end
 					COMPUTE: begin
-            {ifm_read, wgt_read, last_kernel,end_compute,wr_buff_ifm,rd_buff_ifm,set_reg,wr_ifm_clr ,rd_ifm_clr,set_output} <= 10'b0100011000;
+            {ifm_read, wgt_read, last_kernel,end_compute,rd_buff_ifm,set_reg,wr_ifm_clr ,rd_ifm_clr,set_output} <= 9'b010011000;
 						//set_output <= (counter_ifm == (IFM_SIZE - 1));
 					end
 					NOP:
-            {ifm_read, wgt_read, last_kernel,end_compute,wr_buff_ifm,rd_buff_ifm,set_reg,wr_ifm_clr ,rd_ifm_clr, set_output} <= 10'b0000010000;
+            {ifm_read, wgt_read, last_kernel,end_compute,rd_buff_ifm,set_reg,wr_ifm_clr ,rd_ifm_clr, set_output} <= 9'b000010000;
 
 					END:
-            {ifm_read, wgt_read, last_kernel,end_compute,wr_buff_ifm,rd_buff_ifm,set_reg,wr_ifm_clr ,rd_ifm_clr} <= 9'b000001100;
+            {ifm_read, wgt_read, last_kernel,end_compute,rd_buff_ifm,set_reg,wr_ifm_clr ,rd_ifm_clr} <= 8'b00001100;
 					default:
-            {ifm_read, wgt_read, last_kernel,end_compute,wr_buff_ifm,rd_buff_ifm,set_reg,wr_ifm_clr ,rd_ifm_clr} <= 9'b000001100;
+            {ifm_read, wgt_read, last_kernel,end_compute,rd_buff_ifm,set_reg,wr_ifm_clr ,rd_ifm_clr} <= 8'b00001100;
+				endcase
+			end
+		end
+		always @(posedge clk1 or negedge rst_n) begin
+			if(!rst_n) begin
+				wr_buff_ifm_o <= 0;
+			end
+			else begin
+				case(next_state)
+					IDLE:
+				    wr_buff_ifm_o <= 0;
+					WRITE_IFM:
+				    wr_buff_ifm_o <= valid_ifm;
+					WAIT:
+				    wr_buff_ifm_o <= 0;
+					COMPUTE:
+				    wr_buff_ifm_o <= 0;
+					NOP:
+				    wr_buff_ifm_o <= 0;
+					END:
+				    wr_buff_ifm_o <= 0;
 				endcase
 			end
 		end
 
-		always @(posedge clk or rst_n) begin
+		always @(posedge clk1 or rst_n) begin
 			if(~rst_n) begin
 				counter_ifm <= 0;
 				counter_tiling <= 0;
@@ -147,7 +169,7 @@ module CONTROLLER # (parameter IFM_SIZE = 9162, TILING_SIZE = 8, KERNEL_SIZE = 4
 				    counter_kernel <= 0;
 					end
           WRITE_IFM:
-						counter_ifm <= (wr_buff_ifm_o) ? (counter_ifm == IFM_SIZE) ? 0 : counter_ifm +  1 : counter_ifm;
+						counter_ifm <= (wr_buff_ifm) ? (counter_ifm == IFM_SIZE) ? 0 : counter_ifm +  1 : counter_ifm;
 					COMPUTE: begin
 						counter_kernel <= (counter_kernel == KERNEL_SIZE) ? 0 : counter_kernel + 1;
 						counter_ifm    <= (counter_ifm == IFM_SIZE) ? 0 : counter_ifm + 1;
@@ -183,10 +205,6 @@ module CONTROLLER # (parameter IFM_SIZE = 9162, TILING_SIZE = 8, KERNEL_SIZE = 4
 						
 						
 						
-
-
-
-
 
 
 

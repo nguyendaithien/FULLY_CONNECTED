@@ -37,11 +37,11 @@ output reg [3:0] sel_data;
 		case(current_state)
 			3'd0: begin 
 			  if(state == 3'd4 && counter_tiling > 16'd1)
-					next_state = WAIT_WRITE;
+					next_state = WRITE_DATA;
 				else
 					next_state = IDLE;
 				end
-			3'd1: next_state = WRITE_DATA;
+	//		3'd1: next_state = WRITE_DATA;
 			3'd2: begin
 				if(sel_data == TILING_SIZE )
 					next_state = IDLE;
@@ -63,10 +63,10 @@ output reg [3:0] sel_data;
 		  		valid_data <= 0;
 					sel_data   <= 0;
 				end
-				WAIT_WRITE: begin
-		  		valid_data <= 1;
-					sel_data   <= 0;
-        end
+		//		WAIT_WRITE: begin
+		//  		valid_data <= 1;
+		//			sel_data   <= 0;
+    //    end
 				WRITE_DATA: begin
 		  		valid_data <= 1;
 					sel_data   <= (sel_data == TILING_SIZE +1) ? 0 : sel_data + 1;

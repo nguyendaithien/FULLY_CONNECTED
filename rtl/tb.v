@@ -74,6 +74,11 @@ TOP #(.DATA_WIDTH(DATA_WIDTH_1), .IFM_WIDTH(IFM_WIDTH_1), .WGT_WIDTH(WGT_WIDTH_1
 	  ,.wgt_read(wgt_read_1)
 		,.valid_data(valid_data_final)
 		);
+
+initial begin
+	$dumpfile ("XCELIUM.vcd");
+	$dumpvars(0,tb);
+end
 integer file;
 integer file_1;
 
@@ -254,13 +259,14 @@ end
 		initial begin
 			rst_n = 0;
 			clk1 = 0;
+			clk2 = 0;
 			input_valid = 0;
 
 #10   rst_n = 1;
 #5
 			input_valid = 1;
 
-#505   
+#510   
 			input_valid = 0;
 #100   
 			input_valid = 1;

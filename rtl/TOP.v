@@ -149,7 +149,8 @@ WRITE_DATA #(.DATA_WIDTH(DATA_WIDTH), .TILING_SIZE(TILING_SIZE))  write_data(
 );
 
 CONTROLLER #(.IFM_SIZE(IFM_SIZE), .TILING_SIZE(TILING_SIZE), .KERNEL_SIZE(KERNEL_SIZE))  controller (
-   .clk(clk1)
+   .clk1(clk1)
+	,.clk2(clk2)
 	,.rst_n(rst_n)
 	,.start(1'b0)
 	,.ifm_read(ifm_read)
@@ -157,7 +158,7 @@ CONTROLLER #(.IFM_SIZE(IFM_SIZE), .TILING_SIZE(TILING_SIZE), .KERNEL_SIZE(KERNEL
 	,.valid_ifm(valid_ifm)
 	,.last_kernel(last_kernel)
 	,.end_compute(end_compute)
-	,.wr_buff_ifm_o(wr_buff_ifm)
+	,.wr_buff_ifm(wr_buff_ifm)
 	,.rd_buff_ifm(rd_buff_ifm)
 	,.set_reg(set_reg)
 	,.wr_ifm_clr(wr_ifm_clr)
